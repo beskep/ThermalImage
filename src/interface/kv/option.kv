@@ -1,0 +1,205 @@
+#:kivy 2.0
+
+<CheckOnlyBox>:
+    size_hint_x: None
+    width: '32dp'
+
+<TextFieldNumeric>:
+    font_name: 'NotoSansKR'
+    
+
+<OptionFile@MDBoxLayout>:
+    orientation: 'vertical'
+    
+    MDLabel:
+        text: '파일 해석'
+    
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'file'
+            id: image
+            active: True
+        MDLabel:
+            text: '이미지 파일'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'file'
+            id: flir_ir
+        MDLabel:
+            text: 'FLIR 파일: 열화상 추출'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'file'
+            id: flir_vis
+        MDLabel:
+            text: 'FLIR 파일: 실화상 추출'
+
+<OptionContrast@MDBoxLayout>:
+    orientation: 'vertical'
+    
+    MDLabel:
+        text: '전처리: 명암 보정'
+    
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'contrast'
+            id: none
+        MDLabel:
+            text: '미시행'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'contrast'
+            id: equalization
+            active: True
+        MDLabel:
+            text: 'Histogram Equalization'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'contrast'
+            id: normalization
+        MDLabel:
+            text: 'Histogram Normalization'
+
+<OptionNoise@MDBoxLayout>:
+    orientation: 'vertical'
+    
+    MDLabel:
+        text: '전처리: 잡음 보정'
+    
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'noise'
+            id: none
+        MDLabel:
+            text: '미시행'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'noise'
+            id: bilateral
+            active: True
+        MDLabel:
+            text: 'Bilateral Filter'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'noise'
+            id: gaussian
+        MDLabel:
+            text: 'Gaussian Filter'
+
+<OptionPerspective@MDBoxLayout>:
+    orientation: 'vertical'
+    
+    MDLabel:
+        text: '파노라마: 촬영 방법'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'perspective'
+            id: panorama
+            active: True
+        MDLabel:
+            text: 'Panorama'
+
+    MDBoxLayout:
+        CheckOnlyBox:
+            group: 'perspective'
+            id: scan
+        MDLabel:
+            text: 'Scan'
+
+<OptionWarp@MDBoxLayout>:
+    orientation: 'vertical'
+    
+    MDLabel:
+        text: '파노라마: 투영 방법'
+
+    MDBoxLayout:
+        MDBoxLayout:
+            CheckOnlyBox:
+                group: 'warp'
+                id: plane
+                active: True
+            MDLabel:
+                text: 'Plane'
+
+        MDBoxLayout:
+            CheckOnlyBox:
+                group: 'warp'
+                id: compressed_plane
+            MDLabel:
+                text: 'Compressed Plane'
+
+    MDBoxLayout:
+        MDBoxLayout:
+            CheckOnlyBox:
+                group: 'warp'
+                id: panini
+            MDLabel:
+                text: 'Panini'
+
+        MDBoxLayout:
+            CheckOnlyBox:
+                group: 'warp'
+                id: spherical
+            MDLabel:
+                text: 'Spherical'
+
+<OptionScale@MDBoxLayout>:
+    orientation: 'vertical'
+
+    MDLabel:
+        text: '수치 옵션'
+    
+    MDBoxLayout:
+        spacing: '20dp'
+        MDBoxLayout:
+            orientation: 'vertical'
+            TextFieldRatio:
+                text: '1.0'
+                hint_text: '결과 영상 배율'
+                id: compose_scale
+            TextFieldRatio:
+                text: '1.0'
+                hint_text: '영상 처리 배율'
+                id: work_scale
+        MDBoxLayout:
+            TextFieldNumeric:
+                text: '-30.0'
+                hint_text: '하늘 마스킹 기준 온도 (ºC)'
+                id: mask_threshold
+        MDBoxLayout:
+            size_hint_x: 0.2
+
+<OptionScreen@MDBoxLayout>:
+    orientation: 'vertical'
+    padding: '10dp'
+
+    # todo: 제목 label 폰트 스타일 변경
+
+    MDBoxLayout:
+        OptionFile:
+            id: file
+        OptionScale:
+            id: numerical
+
+    MDSeparator:
+
+    MDBoxLayout:
+        OptionContrast:
+            id: contrast
+        OptionNoise:
+            id: noise
+    
+    MDSeparator:
+        
+    MDBoxLayout:
+        OptionPerspective:
+            id: perspective
+        OptionWarp:
+            id: warp

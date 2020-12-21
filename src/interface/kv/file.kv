@@ -1,0 +1,34 @@
+#:kivy 2.0
+
+<FileScreen@MDBoxLayout>:
+    orientation: 'vertical'
+    spacing: '10dp'
+    padding: '10dp'
+
+    MDBoxLayout:
+        size_hint_y: None
+        spacing: '10dp'
+        height: '40dp'
+        
+        MDRaisedButton:
+            size_hint_y: None
+            text: '파일 선택'
+            on_release: app.open_file_manager('load')
+        MDRaisedButton:
+            size_hint_y: None
+            text: '폴더 선택'
+            on_release: app.open_file_manager('load_all')
+        MDRectangleFlatButton:
+            size_hint_y: None
+            text: '초기화'
+            on_release: app.clear_selected_images()
+    
+    MDBoxLayout:
+        MDCard:
+            ScrollView:
+                MDGridLayout:
+                    id: images_view
+                    cols: 3
+                    adapive_height: True
+                    padding: '4dp'
+                    spacing: '4dp'

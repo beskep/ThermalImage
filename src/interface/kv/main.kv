@@ -1,0 +1,69 @@
+#:kivy 2.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+<MDRaisedButton>:
+    font_name: 'NotoSansKRBold'
+    font_size: '15dp'
+
+<PanoramaWidget>:
+    orientation: 'vertical'
+
+    MDToolbar:
+        title: '건물 외피 열화상 파노라마 생성 프로그램'
+    
+    MDProgressBar:
+        # todo: MDToolbar와 간격 조정
+        id: pb
+        type: 'indeterminate'
+        size_hint_y: None
+        height: '1dp'
+    
+    MDBoxLayout:
+
+        MDNavigationRail:
+            id: rail
+            md_bg_color: get_color_from_hex("#343D46")
+            color_normal: get_color_from_hex("#80919B")
+            color_active: get_color_from_hex("#E6F6FF")
+
+            MDNavigationRailItem:
+                id: file
+                icon: 'folder-outline'
+                text: '파일'
+                on_press: root.ids.screen_manager.current = 'screen 1'
+                
+            MDNavigationRailItem:
+                icon: 'tune'
+                text: '옵션'
+                on_press: root.ids.screen_manager.current = 'screen 2'
+                
+            MDNavigationRailItem:
+                icon: 'panorama'
+                text: '변환'
+                on_press: root.ids.screen_manager.current = 'screen 3'
+    
+        MDBoxLayout:
+            padding: '2dp'
+            id: main
+
+            ScreenManager:
+                id: screen_manager
+
+                Screen:
+                    name: 'screen 1'
+
+                    FileScreen:
+                        id: file_screen
+
+                Screen:
+                    name: 'screen 2'
+                    
+                    OptionScreen:
+                        id: option_screen
+
+                Screen:
+                    name: 'screen 3'
+                    
+                    RunScreen:
+                        id: run_screen
+                    

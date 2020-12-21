@@ -1,0 +1,25 @@
+#:kivy 2.0
+
+<RunScreen@MDBoxLayout>:
+    orientation: 'vertical'
+    spacing: '10dp'
+    padding: '10dp'
+
+    MDBoxLayout:
+        size_hint_y: None
+        spacing: '10dp'
+        height: '40dp'
+
+        MDRaisedButton:
+            text: '파노라마 생성'
+            on_release: app.execute()
+
+        MDRaisedButton:
+            text: '저장'
+            on_release: app.open_file_manager('save')
+        
+    MDBoxLayout:
+        MDCard:
+            MDBoxLayout:
+                id: view
+    
