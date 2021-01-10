@@ -1,9 +1,8 @@
 import sys
-
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).parents[1]
-SRC_DIR = ROOT_DIR.joinpath('src')
+PRJ_DIR = Path(__file__).parents[1]
+SRC_DIR = PRJ_DIR.joinpath('src')
 
 assert SRC_DIR.exists()
 _SRC_DIR = SRC_DIR.as_posix()

@@ -41,8 +41,8 @@ def image_and_hist_plot(images, xlabels, hist_kwargs, cumul=False):
 if __name__ == '__main__':
   sns.set_context('paper')
 
-  data_dir = dirs.ROOT_DIR.joinpath('data/preprocessing_histogram')
-  res_dir = dirs.ROOT_DIR.joinpath('result/preprocessing_histogram')
+  data_dir = utils.PRJ_DIR.joinpath('data/preprocessing_example')
+  res_dir = utils.PRJ_DIR.joinpath('result/preprocessing_histogram')
   if not res_dir.exists():
     res_dir.mkdir()
 

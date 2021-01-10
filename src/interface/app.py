@@ -435,6 +435,13 @@ class PanoramaApp(MDApp):
         panorama, mask, graph, indices = None, None, None, None
         self._logger.error('파노라마 생성 실패', exc_info=True)
 
+    if (panorama is not None and options['is_numeric'] and
+        options['mask_threshold']):
+      # 경계면에 thresholding 오류 보정
+      error_mask = panorama < options['mask_threshold']
+      fill_value = panorama[np.logical_not(mask)].ravel()[0]
+      panorama[error_mask] = fill_value
+
     return panorama, mask, graph, indices
 
   def colorize(self, image):
