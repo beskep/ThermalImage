@@ -7,21 +7,51 @@
 
     MDBoxLayout:
         size_hint_y: None
-        spacing: '10dp'
         height: '40dp'
+        orientation: 'horizontal'
         
-        MDRaisedButton:
+        MDBoxLayout:
             size_hint_y: None
-            text: '파일 선택'
-            on_release: app.open_file_manager('load')
-        MDRaisedButton:
+            spacing: '10dp'
+            height: '40dp'
+            MDRaisedButton:
+                size_hint_y: None
+                text: '파일 선택'
+                on_release: app.open_file_manager('load')
+            MDRaisedButton:
+                size_hint_y: None
+                text: '폴더 선택'
+                on_release: app.open_file_manager('load_all')
+            MDRectangleFlatButton:
+                size_hint_y: None
+                text: '초기화'
+                on_release: app.clear_selected_images()
+    
+        MDBoxLayout:
             size_hint_y: None
-            text: '폴더 선택'
-            on_release: app.open_file_manager('load_all')
-        MDRectangleFlatButton:
-            size_hint_y: None
-            text: '초기화'
-            on_release: app.clear_selected_images()
+            spacing: '10dp'
+            height: '40dp'
+            MDBoxLayout:
+                CheckOnlyBox:
+                    group: 'ext'
+                    id: ext_image
+                    active: True
+                MDLabel:
+                    text: '이미지'
+            MDBoxLayout:
+                CheckOnlyBox:
+                    group: 'ext'
+                    id: ext_array
+                    active: True
+                MDLabel:
+                    text: '배열 (xlsx, csv)'
+            MDBoxLayout:
+                CheckOnlyBox:
+                    group: 'ext'
+                    id: ext_npy
+                    active: True
+                MDLabel:
+                    text: 'npy'
     
     MDBoxLayout:
         MDCard:

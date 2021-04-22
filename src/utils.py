@@ -42,7 +42,7 @@ if not logging.getLogger().handlers:
 
   logging.config.dictConfig(config['logging'])
 
-  rich_handler = RichHandler(level=logging.INFO, show_time=False)
+  rich_handler = RichHandler(level=logging.INFO, show_time=True)
   logging.getLogger('IR').addHandler(rich_handler)
 
   try:

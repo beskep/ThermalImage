@@ -70,12 +70,13 @@ class FlirImageExtractor:
     :return:
     """
     key = 'RawThermalImageType'
-    meta_json = subprocess.check_output([
+    args = [
         self.exiftool_path,
         ('-' + key),
         '-j',
         self.flir_img_filename,
-    ])
+    ]
+    meta_json = subprocess.check_output(args, stderr=subprocess.DEVNULL)
     meta = json.loads(meta_json.decode())[0]
 
     if key not in meta:
@@ -105,12 +106,13 @@ class FlirImageExtractor:
     if self.use_thumbnail:
       image_tag = "-ThumbnailImage"
 
-    visual_img_bytes = subprocess.check_output([
+    args = [
         self.exiftool_path,
         image_tag,
         "-b",
         self.flir_img_filename,
-    ])
+    ]
+    visual_img_bytes = subprocess.check_output(args, stderr=subprocess.DEVNULL)
     visual_img_stream = io.BytesIO(visual_img_bytes)
 
     visual_img = Image.open(visual_img_stream)
@@ -125,7 +127,7 @@ class FlirImageExtractor:
 
     # read image metadata needed for conversion of the raw sensor values
     # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
-    meta_json = subprocess.check_output([
+    meta_args = [
         self.exiftool_path,
         self.flir_img_filename,
         '-Emissivity',
@@ -141,16 +143,19 @@ class FlirImageExtractor:
         '-PlanckO',
         '-PlanckR2',
         '-j',
-    ])
+    ]
+    meta_json = subprocess.check_output(meta_args, stderr=subprocess.DEVNULL)
     meta = json.loads(meta_json.decode())[0]
 
     # exifread can't extract the embedded thermal image, use exiftool instead
-    thermal_img_bytes = subprocess.check_output([
+    img_args = [
         self.exiftool_path,
         "-RawThermalImage",
         "-b",
         self.flir_img_filename,
-    ])
+    ]
+    thermal_img_bytes = subprocess.check_output(img_args,
+                                                stderr=subprocess.DEVNULL)
     thermal_img_stream = io.BytesIO(thermal_img_bytes)
 
     thermal_img = Image.open(thermal_img_stream)

@@ -1,5 +1,6 @@
 import threading
 from pathlib import Path
+from typing import List
 
 import utils
 
@@ -19,6 +20,7 @@ from kivymd.uix.imagelist import SmartTileWithLabel
 from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.snackbar import Snackbar
 from skimage.exposure import rescale_intensity
+from skimage.transform import resize as skresize
 
 import flir
 import interface.widget.text_field
@@ -94,6 +96,9 @@ class PanoramaApp(MDApp):
   }
 
   def __init__(self, **kwargs):
+    self.root = None
+    self.built = None
+
     super().__init__(**kwargs)
 
     for fs in _FONT_STYLES:
@@ -116,7 +121,7 @@ class PanoramaApp(MDApp):
     self._snackbar.duration = 2.5
     self._snackbar.font_size = dp(16)
 
-    self._selected_files = []
+    self._selected_files: List[Path] = []
     self._save_dir = None
     self._result = None
 
@@ -186,16 +191,21 @@ class PanoramaApp(MDApp):
     except WidgetException:
       pass
 
-  def open_file_manager(self, mode):
+  def open_file_manager(self, mode: str):
     if mode not in ('load', 'load_all', 'save'):
       raise ValueError
 
-    if mode == 'load':
-      ext = ['.jpg', '.jpeg', '.png', '.tiff', '.xlsx', '.csv', '.npy']
+    if mode.startswith('load'):
+      # ext = ['.jpg', '.jpeg', '.png', '.tiff', '.xlsx', '.csv', '.npy']
+      ext = self.get_ext_option()
+      assert ext is not None
       ext = ext + [x.upper() for x in ext]
-      selector = 'multi'
     else:
       ext = []
+
+    if mode == 'load':
+      selector = 'multi'
+    else:
       selector = 'folder'
 
     self.file_manager.mode = mode
@@ -218,7 +228,12 @@ class PanoramaApp(MDApp):
         assert isinstance(path, str)
         path = Path(path)
         assert path.is_dir()
-        self._selected_files = [x for x in path.glob('*') if x.is_file()]
+
+        ext = self.get_ext_option()
+        self._selected_files = [
+            x for x in path.glob('*')
+            if x.is_file() and (x.suffix.lower() in ext)
+        ]
 
       self.show_selected_images(self._selected_files)
     else:
@@ -283,6 +298,22 @@ class PanoramaApp(MDApp):
 
     return options
 
+  def get_ext_option(self):
+    # fixme: 막 만듬
+    file_screen = self.root.ids.file_screen
+    ext = {
+        'ext_image': ['.jpg', '.jpeg', '.png', '.tiff'],
+        'ext_array': ['.xlsx', '.csv'],
+        'ext_npy': ['.npy'],
+    }
+    res = None
+    for key, value in ext.items():
+      if getattr(file_screen.ids, key).state == 'down':
+        res = value
+        break
+
+    return res
+
   @staticmethod
   def _read_fn(option: str):
     if option not in ['image', 'flir_ir', 'flir_vis']:
@@ -319,8 +350,14 @@ class PanoramaApp(MDApp):
         image = None
         msg = '파일 불러오기 실패: {}'.format(file.name)
         self._logger.error(msg, exc_info=True)
+
       else:
         msg = None
+
+        # fixme: 매번 FLIR 해석하기 귀찮아서 임시로 저장하게 함
+        if option == 'flir_ir':
+          npy_path = file.with_suffix('.npy')
+          np.save(file=npy_path.as_posix(), arr=np.round(image, 3))
 
       if image is not None:
         images.append(image)
@@ -357,12 +394,17 @@ class PanoramaApp(MDApp):
 
     self.show_snackbar('파일 로드 완료', duration=1.0)
 
+    # bug: compose aspect가 제대로 작동 안함
+    # 화질은 낮아지는데 결과물 해상도가 그대로인거 보면 다시 upscale하는지도...
+
     # 파노라마 생성
     panorama, mask, graph, indices = self.make_panorama(images=images,
                                                         options=options)
     if panorama is None:
       self.show_snackbar('파노라마 생성 실패', duration=4)
       return
+    else:
+      self.show_snackbar('파노라마 생성')
 
     # 열화상 정보만 있는 구역 (bounding box) crop
     x1, x2, y1, y2 = imt.mask_bbox(mask=mask, morpology_open=True)
@@ -381,7 +423,7 @@ class PanoramaApp(MDApp):
     }
 
     # 결과 표시
-    self.show_image(image=panorama.copy(), mask=mask)
+    self.show_image(image=panorama, mask=mask)
 
     self.show_snackbar('파노라마 생성 완료')
 
@@ -452,6 +494,16 @@ class PanoramaApp(MDApp):
 
   @mainthread
   def show_image(self, image, mask=None):
+    width = 2000  # TODO option
+    if image.shape[1] > width:
+      output_shape = (int(image.shape[0] * width / image.shape[1]), width)
+      image = skresize(image=image,
+                       output_shape=output_shape,
+                       anti_aliasing=False)
+      mask = skresize(image=mask,
+                      output_shape=output_shape,
+                      anti_aliasing=False)
+
     fig, ax = plt.subplots(1, 1)
 
     if image.ndim == 3:
