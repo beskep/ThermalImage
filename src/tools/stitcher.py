@@ -352,8 +352,8 @@ class Stitcher:
                                                          cameras=cameras)
 
     # stitch
-    scaled_imgaes = [images.scale(x, out_range='int16') for x in warped_images]
-    stitched_image, stitched_mask = self.blend(images=scaled_imgaes,
+    scaled_images = [images.scale(x, out_range='int16') for x in warped_images]
+    stitched_image, stitched_mask = self.blend(images=scaled_images,
                                                masks=warped_masks,
                                                rois=rois)
     stitched_image[np.logical_not(stitched_mask)] = np.median(stitched_image)

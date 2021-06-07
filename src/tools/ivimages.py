@@ -80,14 +80,14 @@ class IVImages:
 
   def ir_mask(self) -> Union[None, np.ndarray]:
     """
-        nan가 아닌 영역의 mask 반환
-        모두 nan이 아니거나 IR array가 None이면 None 반환
+    nan가 아닌 영역의 mask 반환
+    모두 nan이 아니거나 IR array가 None이면 None 반환
 
-        Returns
-        -------
-        Union[None, np.ndarray]
-            mask
-        """
+    Returns
+    -------
+    Union[None, np.ndarray]
+        mask
+    """
     if self.ir_array is None:
       mask = None
     else:

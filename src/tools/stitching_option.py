@@ -51,11 +51,11 @@ class StitchingOption:
         yield self.elements(case, direction)
 
   def _get_loader(self, cls, case=None):
-    clsdict = {
+    cls_dict = {
         'ImageLoader': ivi.ImageLoader,
         'IVImagesLoader': ivi.IVImagesLoader
     }
-    if cls not in clsdict:
+    if cls not in cls_dict:
       raise ValueError
 
     if cls not in self.options:
@@ -76,7 +76,7 @@ class StitchingOption:
           if k.endswith('dir'):
             kwargs[k] = Path(v).joinpath(subdir).as_posix()
 
-      loader = clsdict[cls](**kwargs)
+      loader = cls_dict[cls](**kwargs)
 
     return loader
 

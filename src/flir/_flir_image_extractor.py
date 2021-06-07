@@ -86,9 +86,9 @@ class FlirImageExtractor:
 
   def get_rgb_np(self):
     """
-        Return the last extracted rgb image
-        :return:
-        """
+    Return the last extracted rgb image
+    :return:
+    """
     return self.rgb_image_np
 
   def get_thermal_np(self):
@@ -103,6 +103,7 @@ class FlirImageExtractor:
     extracts the visual image as 2D numpy array of RGB values
     """
     image_tag = "-EmbeddedImage"
+    # FIXME 실화상이 저장되지 않은 경우 (`EmbeddedImage`가 없는 경우) ThumbnailImage 대신 적용
     if self.use_thumbnail:
       image_tag = "-ThumbnailImage"
 
@@ -122,8 +123,8 @@ class FlirImageExtractor:
 
   def extract_thermal_image(self):
     """
-        extracts the thermal image as 2D numpy array with temperatures in oC
-        """
+    extracts the thermal image as 2D numpy array with temperatures in oC
+    """
 
     # read image metadata needed for conversion of the raw sensor values
     # E=1,SD=1,RTemp=20,ATemp=RTemp,IRWTemp=RTemp,IRT=1,RH=50,PR1=21106.77,PB=1501,PF=1,PO=-7340,PR2=0.012545258
@@ -222,11 +223,11 @@ class FlirImageExtractor:
                PO=-7340,
                PR2=0.012545258):
     """
-        convert raw values from the flir sensor to temperatures in C
-        # this calculation has been ported to python from
-        # https://github.com/gtatters/Thermimage/blob/master/R/raw2temp.R
-        # a detailed explanation of what is going on here can be found there
-        """
+    convert raw values from the flir sensor to temperatures in C
+    # this calculation has been ported to python from
+    # https://github.com/gtatters/Thermimage/blob/master/R/raw2temp.R
+    # a detailed explanation of what is going on here can be found there
+    """
 
     # constants
     ATA1 = 0.006569
@@ -296,9 +297,9 @@ class FlirImageExtractor:
 
   def plot(self):
     """
-        Plot the rgb + thermal image (easy to see the pixel values)
-        :return:
-        """
+    Plot the rgb + thermal image (easy to see the pixel values)
+    :return:
+    """
     rgb_np = self.get_rgb_np()
     thermal_np = self.get_thermal_np()
 
@@ -310,9 +311,9 @@ class FlirImageExtractor:
 
   def save_images(self):
     """
-        Save the extracted images
-        :return:
-        """
+    Save the extracted images
+    :return:
+    """
     rgb_np = self.get_rgb_np()
     thermal_np = self.extract_thermal_image()
 

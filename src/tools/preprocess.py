@@ -52,7 +52,7 @@ class PanoramaPreprocess:
       raise ValueError
 
     self._is_numeric = is_numeric
-    self._mask_thershold = mask_threshold
+    self._mask_threshold = mask_threshold
 
     if constrast == 'equalization':
       self._contrast_fn = skexp.equalize_hist
@@ -80,7 +80,7 @@ class PanoramaPreprocess:
 
   def __call__(self, image):
     if self._is_numeric:
-      mask = (self._mask_thershold < image).astype('uint8')
+      mask = (self._mask_threshold < image).astype('uint8')
     else:
       mask = None
 
