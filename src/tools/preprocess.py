@@ -2,10 +2,9 @@
 Stitcher용 전처리 함수
 """
 
-import utils
-
 import cv2 as cv
 import skimage.exposure as skexp
+from loguru import logger
 
 from tools.imagetools import normalize_rgb_image_hist
 
@@ -57,12 +56,10 @@ class PanoramaPreprocess:
     if constrast == 'equalization':
       self._contrast_fn = skexp.equalize_hist
       if not is_numeric:
-        logger = utils.get_logger()
         logger.warning('실화상에 Histogram equalization을 적용합니다. '
                        '예상치 못한 오류가 발생할 수 있습니다.')
     elif constrast == 'normalization':
       if is_numeric:
-        logger = utils.get_logger()
         logger.warning('열화상에 Histogram normalization을 적용할 수 없습니다. '
                        '명암 보정을 적용하지 않습니다')
         self._contrast_fn = _pass_fn

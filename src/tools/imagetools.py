@@ -119,14 +119,14 @@ def _mask_range(mask, axis):
   return int(c1), int(c2)
 
 
-def mask_bbox(mask: np.ndarray, morpology_open=True):
+def mask_bbox(mask: np.ndarray, morphology_open=True):
   """
   마스크 bounding box 좌표 찾기
   https://stackoverflow.com/questions/39206986/numpy-get-rectangle-area-just-the-size-of-mask/48346079"""
   if mask.ndim != 2:
     raise ValueError
 
-  if morpology_open:
+  if morphology_open:
     kernel = np.ones(shape=(3, 3), dtype='uint8')
     mask_ = cv.morphologyEx(src=mask, op=cv.MORPH_OPEN, kernel=kernel)
   else:

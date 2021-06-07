@@ -1,9 +1,11 @@
 import logging
-import logging.config
+import os
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path
 
 import yaml
+from loguru import logger
 from rich.logging import RichHandler
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -30,32 +32,19 @@ def get_config():
   return config
 
 
-def get_logger():
-  logger = logging.getLogger('IR')
+def set_logger():
+  rich_handler = RichHandler(show_time=True)
 
-  return logger
+  if any('debug' in x.lower() for x in sys.argv):
+    level = 'DEBUG'
+  else:
+    level = 'INFO'
 
+  logger.remove()
 
-# logger 설정
-if not logging.getLogger().handlers:
-  config = get_config()
-
-  logging.config.dictConfig(config['logging'])
-
-  rich_handler = RichHandler(level=logging.INFO, show_time=True)
-  logging.getLogger('IR').addHandler(rich_handler)
-
-  try:
-    from kivy.logger import Logger as kvlogger
-
-    kvlogger.handlers = [
-        handler for handler in kvlogger.handlers
-        if not isinstance(handler, logging.StreamHandler)
-    ]
-    kvlogger.addHandler(rich_handler)
-  except ModuleNotFoundError:
-    pass
-
-  logger = get_logger()
-  logger.info('project dir: %s', PRJ_DIR)
-  logger.info('src dir: %s', SRC_DIR)
+  logger.add(rich_handler, level=level, format='{message}', enqueue=True)
+  logger.add('.log',
+             level='DEBUG',
+             rotation='1 MB',
+             encoding='utf-8-sig',
+             enqueue=True)

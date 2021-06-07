@@ -12,13 +12,7 @@ import yaml
 from kivy.clock import mainthread
 from kivy.metrics import dp
 from kivy.uix.widget import WidgetException
-from kivymd.app import MDApp
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.filemanager import MDFileManager
-from kivymd.uix.gridlayout import MDGridLayout
-from kivymd.uix.imagelist import SmartTileWithLabel
-from kivymd.uix.selectioncontrol import MDCheckbox
-from kivymd.uix.snackbar import Snackbar
+from loguru import logger
 from skimage.exposure import rescale_intensity
 from skimage.transform import resize as skresize
 
@@ -30,6 +24,13 @@ import tools.ivimages as ivi
 import tools.preprocess as prep
 from interface import kvtools
 from interface.widget.mpl_widget import figure_widget
+from kivymd.app import MDApp
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.gridlayout import MDGridLayout
+from kivymd.uix.imagelist import SmartTileWithLabel
+from kivymd.uix.selectioncontrol import MDCheckbox
+from kivymd.uix.snackbar import Snackbar
 from tools.stitcher import Stitcher, StitchingImages
 
 _FONT_STYLES = ('H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Subtitle1', 'Subtitle2',
@@ -125,13 +126,10 @@ class PanoramaApp(MDApp):
     self._save_dir = None
     self._result = None
 
-    self._logger = utils.get_logger()
-
     try:
       cmap = get_cmap()
     except (IOError, LookupError):
-      self._logger.error('FLIR 컬러맵 로드에 실패했습니다. magma 컬러맵을 사용합니다.',
-                         exc_info=True)
+      logger.exception('FLIR 컬러맵 로드에 실패했습니다. magma 컬러맵을 사용합니다.')
       cmap = sns.color_palette(palette='magma', as_cmap=True)
 
     self._cmap = cmap
@@ -181,7 +179,7 @@ class PanoramaApp(MDApp):
   @mainthread
   def show_snackbar(self, message, duration=None):
     self._snackbar.text = message
-    self._logger.debug('Snackbar message: %s', message)
+    logger.debug('Snackbar message: {}', message)
 
     if duration:
       self._snackbar.duration = duration
@@ -348,8 +346,7 @@ class PanoramaApp(MDApp):
         msg = '파일 형식 오류 (FLIR Exif 정보 없음): {}'.format(file.name)
       except Exception:
         image = None
-        msg = '파일 불러오기 실패: {}'.format(file.name)
-        self._logger.error(msg, exc_info=True)
+        logger.exception('파일 불러오기 실패: {}', file.name)
 
       else:
         msg = None
@@ -366,7 +363,7 @@ class PanoramaApp(MDApp):
           msg = '파일 로드 ({}/{}): {}'.format(idx + 1, files_count, file.name)
           self.show_snackbar(msg, duration=1.0)
       else:
-        self._logger.error(msg)
+        logger.error(msg)
         self.show_snackbar(msg)
         images = None
         break
@@ -381,7 +378,7 @@ class PanoramaApp(MDApp):
       else:
         msg = '파일이 하나만 선택되었습니다'
 
-      self._logger.debug(msg)
+      logger.debug(msg)
       self.show_snackbar(msg)
       return
 
@@ -407,9 +404,9 @@ class PanoramaApp(MDApp):
       self.show_snackbar('파노라마 생성')
 
     # 열화상 정보만 있는 구역 (bounding box) crop
-    x1, x2, y1, y2 = imt.mask_bbox(mask=mask, morpology_open=True)
+    x1, x2, y1, y2 = imt.mask_bbox(mask=mask, morphology_open=True)
     if (x1, y1) != (0, 0) or mask.shape != (y2, x2):
-      self._logger.debug('Image cropped: [%d:%d, %d:%d]', x1, x2, y1, y2)
+      logger.debug('Image cropped: [{:d}:{:d}, {:d}:{:d}]', x1, x2, y1, y2)
       panorama = panorama[y1:y2, x1:x2]
       mask = mask[y1:y2, x1:x2]
 
@@ -463,7 +460,7 @@ class PanoramaApp(MDApp):
                                                        masks=None)
     except Exception:
       panorama, mask, graph, indices = None, None, None, None
-      self._logger.error('파노라마 생성 실패', exc_info=True)
+      logger.exception('파노라마 생성 실패')
 
     if panorama is None and 'A1.5B1' in warp:
       # warper 바꾸고 재시도
@@ -475,7 +472,7 @@ class PanoramaApp(MDApp):
             images=stitching_images, masks=None)
       except Exception:
         panorama, mask, graph, indices = None, None, None, None
-        self._logger.error('파노라마 생성 실패', exc_info=True)
+        logger.exception('파노라마 생성 실패')
 
     if (panorama is not None and options['is_numeric'] and
         options['mask_threshold']):
@@ -550,7 +547,7 @@ class PanoramaApp(MDApp):
     assert save_dir and save_dir.exists()
     if self._result is None:
       msg = '파노라마가 생성되지 않았습니다.'
-      self._logger.debug(msg)
+      logger.debug(msg)
       self.show_snackbar(msg)
       return
 

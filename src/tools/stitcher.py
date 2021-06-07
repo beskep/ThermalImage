@@ -1,11 +1,9 @@
-import logging
 from typing import List, Union
 
 import cv2 as cv
 import numpy as np
+from loguru import logger
 from skimage.exposure import rescale_intensity
-
-import tools.imagetools as imt
 
 _AVAILABLE_WARPER = (
     'affine',
@@ -137,8 +135,6 @@ class Stitcher:
     self.features_finder = features_finder
     self.set_mode(mode.lower())
 
-    self._logger = logging.getLogger(self.__class__.__name__)
-
   @property
   def estimator(self) -> cv.detail_Estimator:
     return self._estimator
@@ -218,7 +214,7 @@ class Stitcher:
   def blend_strength(self, value: float):
     if not (0.0 <= value <= 1.0):
       msg = 'blender strength not in [0, 1], value: {}'.format(value)
-      self._logger.error(msg)
+      logger.error(msg)
       raise ValueError(msg)
 
     self._blend_strength = value
@@ -313,7 +309,7 @@ class Stitcher:
   def find_features(self, image, mask):
     if self.features_finder is None:
       msg = 'features_finder가 지정되지 않음'
-      self._logger.error(msg)
+      logger.error(msg)
       raise ValueError(msg)
 
     features = cv.detail.computeImageFeatures2(
@@ -342,9 +338,7 @@ class Stitcher:
 
     if len(indices) != len(prep_images):
       images.select_images(indices=indices)
-
-      msg = 'Stitghing에 필요 없는 이미지 제거 (indices: {})'.format(indices)
-      self._logger.debug(msg)
+      logger.debug('Stitching에 필요 없는 이미지 제거 (indices: {})', indices)
 
     # warp
     warped_images, warped_masks, rois = self.warp_images(images=images.arrays,
@@ -367,7 +361,7 @@ class Stitcher:
     return unscaled_image, stitched_mask, matches_graph, indices
 
   def calculate_camera_matrix(self, images: List[np.ndarray], image_names):
-    self._logger.debug('feature finding and matching')
+    logger.debug('feature finding and matching')
     # note: find_features에는 마스크 적용하지 않음
     # (~mask에 0 대입한 영상으로 feature 탐색)
     features = [self.find_features(image=image, mask=None) for image in images]
@@ -380,27 +374,27 @@ class Stitcher:
                                               conf_threshold=0.3)
     if len(indices) < 2:
       msg = 'Need more images (valid images are less than two)'
-      self._logger.error(msg)
+      logger.error(msg)
       raise ValueError(msg)
 
     indices = [x[0] for x in indices]
     images = [images[x] for x in indices]
 
-    self._logger.debug('matches graph')
+    logger.debug('matches graph')
     matches_graph = cv.detail.matchesGraphAsString(
         pathes=image_names,
         pairwise_matches=pairwise_matches,
         conf_threshold=1.0)
 
-    self._logger.debug('estimator')
+    logger.debug('estimator')
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
       msg = 'Homography estimation failed'
-      self._logger.error(msg)
+      logger.error(msg)
       raise ValueError(msg)
 
-    self._logger.debug('bundle adjuster')
+    logger.debug('bundle adjuster')
     self.bundle_adjuster.setConfThresh(1)
     self.bundle_adjuster.setRefinementMask(self.refine_mask)
 
@@ -411,10 +405,10 @@ class Stitcher:
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
       msg = 'Camera parameters adjusting failed'
-      self._logger.error(msg)
+      logger.error(msg)
       raise ValueError(msg)
 
-    # self._logger.debug('wave correction')
+    # logger.debug('wave correction')
     # if self.flag_wave_correction:
     #   # FIXME: wave correction -> cv assert 에러
     #   rmats = [np.copy(x.R) for x in cameras]
@@ -515,7 +509,7 @@ class Stitcher:
       blend_type = 'no'
     else:
       blend_type = self.blend_type
-    self._logger.debug('blend type: %s', blend_type)
+    logger.debug('blend type: {}', blend_type)
 
     # blender 생성
     if blend_type == 'no':

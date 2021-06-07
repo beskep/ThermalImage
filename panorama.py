@@ -6,4 +6,5 @@ import tools.stitcher
 from interface.app import main
 
 if __name__ == "__main__":
+  src.utils.set_logger()
   main()
