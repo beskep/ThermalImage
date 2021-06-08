@@ -213,9 +213,8 @@ class Stitcher:
   @blend_strength.setter
   def blend_strength(self, value: float):
     if not (0.0 <= value <= 1.0):
-      msg = 'blender strength not in [0, 1], value: {}'.format(value)
-      logger.error(msg)
-      raise ValueError(msg)
+      raise ValueError(
+          'blender strength not in [0, 1], value: {}'.format(value))
 
     self._blend_strength = value
 
@@ -287,7 +286,8 @@ class Stitcher:
   def set_warper(self, scale):
     self._warper = cv.PyRotationWarper(type=self.warper_type, scale=scale)
 
-  def available_warper_types(self):
+  @staticmethod
+  def available_warper_types():
     return _AVAILABLE_WARPER[:]
 
   def set_mode(self, mode: str):
@@ -304,13 +304,11 @@ class Stitcher:
     else:
       raise ValueError(mode)
 
-    self._mode = mode[:4]
+    self._mode = mode
 
   def find_features(self, image, mask):
     if self.features_finder is None:
-      msg = 'features_finder가 지정되지 않음'
-      logger.error(msg)
-      raise ValueError(msg)
+      raise ValueError('features_finder가 지정되지 않음')
 
     features = cv.detail.computeImageFeatures2(
         featuresFinder=self.features_finder, image=image, mask=mask)
@@ -373,9 +371,7 @@ class Stitcher:
                                               pairwise_matches=pairwise_matches,
                                               conf_threshold=0.3)
     if len(indices) < 2:
-      msg = 'Need more images (valid images are less than two)'
-      logger.error(msg)
-      raise ValueError(msg)
+      raise ValueError('Need more images (valid images are less than two)')
 
     indices = [x[0] for x in indices]
     images = [images[x] for x in indices]
@@ -390,9 +386,7 @@ class Stitcher:
     estimate_status, cameras = self.estimator.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=None)
     if not estimate_status:
-      msg = 'Homography estimation failed'
-      logger.error(msg)
-      raise ValueError(msg)
+      raise ValueError('Homography estimation failed')
 
     logger.debug('bundle adjuster')
     self.bundle_adjuster.setConfThresh(1)
@@ -404,9 +398,7 @@ class Stitcher:
     adjuster_status, cameras = self.bundle_adjuster.apply(
         features=features, pairwise_matches=pairwise_matches, cameras=cameras)
     if not adjuster_status:
-      msg = 'Camera parameters adjusting failed'
-      logger.error(msg)
-      raise ValueError(msg)
+      raise ValueError('Camera parameters adjusting failed')
 
     # logger.debug('wave correction')
     # if self.flag_wave_correction:
@@ -468,17 +460,19 @@ class Stitcher:
     return warped_image, warped_mask, roi
 
   def warp_images(self, images, masks, cameras):
-    focals = [x.focal for x in cameras]
-    warped_image_scale = np.median(focals)
-    self.set_warper(scale=warped_image_scale)
+    self.set_warper(scale=np.median([x.focal for x in cameras]))
 
-    warped = [
-        self.warp_image(image, mask, camera)
-        for image, mask, camera in zip(images, masks, cameras)
-    ]
-    warped_images = [x[0] for x in warped]
-    warped_masks = [x[1] for x in warped]
-    rois = [x[2] for x in warped]
+    warped_images = []
+    warped_masks = []
+    rois = []
+    for idx, (image, mask, camera) in enumerate(zip(images, masks, cameras)):
+      try:
+        wi, wm, roi = self.warp_image(image, mask, camera)
+        warped_images.append(wi)
+        warped_masks.append(wm)
+        rois.append(roi)
+      except cv.error:
+        logger.error(f'{idx+1}번 영상의 과도한 변형으로 인한 오류 발생. 해당 영상을 제외합니다.')
 
     return warped_images, warped_masks, rois
 
@@ -505,10 +499,7 @@ class Stitcher:
 
     # blend width 계산, blender type 결정
     blend_width = (np.sqrt(dst_size[2] * dst_size[3]) * self._blend_strength)
-    if blend_width < 1:
-      blend_type = 'no'
-    else:
-      blend_type = self.blend_type
+    blend_type = 'no' if blend_width < 1 else self.blend_type
     logger.debug('blend type: {}', blend_type)
 
     # blender 생성
@@ -517,7 +508,7 @@ class Stitcher:
                                                 try_gpu=self._try_cuda)
     elif blend_type == 'multiband':
       blender = cv.detail_MultiBandBlender()
-      bands_count = (np.log(blend_width) / np.log(2.0) - 1.0).astype(np.int)
+      bands_count = (np.log2(blend_width) - 1.0).astype(np.int)
       blender.setNumBands(bands_count)
     elif blend_type == 'feather':
       blender = cv.detail_FeatherBlender()
