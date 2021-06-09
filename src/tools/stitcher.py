@@ -238,8 +238,8 @@ class Stitcher:
     None
     """
     if confidence is None:
-      if (self._features_matcher is None or
-          isinstance(self._features_matcher, cv.ORB)):
+      if (self._features_finder is None or
+          isinstance(self._features_finder, cv.ORB)):
         confidence = 0.30
       else:
         confidence = 0.65
@@ -261,7 +261,7 @@ class Stitcher:
           try_use_gpu=self._try_cuda,
           match_conf=confidence,
       )
-    self._features_matcher = matcher
+    self.features_matcher = matcher
 
   def set_bundle_adjuster_refine_mask(self,
                                       fx=True,
@@ -421,7 +421,14 @@ class Stitcher:
     size = (int(image.shape[1] * self._compose_scale),
             int(image.shape[0] * self._compose_scale))
     kmat = camera.K().astype(np.float32)
-    roi = self.warper.warpRoi(src_size=size, K=kmat, R=camera.R)
+    rmat = camera.R
+    roi = self.warper.warpRoi(src_size=size, K=kmat, R=rmat)
+
+    # TODO 적당한 배율 찾기
+    warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
+    if ((image.shape[0] * 10 < warped_shape[0]) or
+        (image.shape[1] * 10 < warped_shape[1])):
+      raise cv.error
 
     if abs(self._compose_scale - 1) > 0.1:
       # float32에도 돌아가나?
@@ -439,8 +446,6 @@ class Stitcher:
     else:
       img = image
 
-    kmat = camera.K().astype(np.float32)
-    rmat = camera.R
     # note: (roi[0], roi[1]) == corner
     corner, warped_image = self.warper.warp(src=img,
                                             K=kmat,
@@ -460,7 +465,8 @@ class Stitcher:
     return warped_image, warped_mask, roi
 
   def warp_images(self, images, masks, cameras):
-    self.set_warper(scale=np.median([x.focal for x in cameras]))
+    scale = np.median([x.focal for x in cameras])
+    self.set_warper(scale=scale)
 
     warped_images = []
     warped_masks = []

@@ -223,7 +223,6 @@ class PanoramaApp(MDApp):
         self._selected_files = [Path(x) for x in path]
       else:
         # mode == 'load_all'
-        assert isinstance(path, str)
         path = Path(path)
         assert path.is_dir()
 
@@ -235,7 +234,6 @@ class PanoramaApp(MDApp):
 
       self.show_selected_images(self._selected_files)
     else:
-      assert isinstance(path, str)
       path = Path(path)
       assert path.is_dir()
       self._save_dir = path
@@ -462,17 +460,17 @@ class PanoramaApp(MDApp):
       panorama, mask, graph, indices = None, None, None, None
       logger.exception('파노라마 생성 실패')
 
-    if panorama is None and 'A1.5B1' in warp:
-      # warper 바꾸고 재시도
-      warp = warp.replace('A1.5', 'A2')
-      stitcher.warper_type = warp
+    # if panorama is None and 'A1.5B1' in warp:
+    #   # warper 바꾸고 재시도
+    #   warp = warp.replace('A1.5', 'A2')
+    #   stitcher.warper_type = warp
 
-      try:
-        panorama, mask, graph, indices = stitcher.stitch(
-            images=stitching_images, masks=None)
-      except Exception:
-        panorama, mask, graph, indices = None, None, None, None
-        logger.exception('파노라마 생성 실패')
+    #   try:
+    #     panorama, mask, graph, indices = stitcher.stitch(
+    #         images=stitching_images, masks=None)
+    #   except Exception:
+    #     panorama, mask, graph, indices = None, None, None, None
+    #     logger.exception('파노라마 생성 실패')
 
     if (panorama is not None and options['is_numeric'] and
         options['mask_threshold']):
