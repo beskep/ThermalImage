@@ -1,7 +1,4 @@
-import logging
-import os
 import sys
-from contextlib import redirect_stdout
 from pathlib import Path
 
 import yaml
@@ -33,18 +30,18 @@ def get_config():
 
 
 def set_logger():
-  rich_handler = RichHandler(show_time=True)
+  logger.remove()
 
   if any('debug' in x.lower() for x in sys.argv):
     level = 'DEBUG'
   else:
     level = 'INFO'
 
-  logger.remove()
-
+  rich_handler = RichHandler(show_time=True)
   logger.add(rich_handler, level=level, format='{message}', enqueue=True)
-  logger.add('.log',
+  logger.add('pano.log',
              level='DEBUG',
-             rotation='1 MB',
+             rotation='1 week',
+             retention='1 month',
              encoding='utf-8-sig',
              enqueue=True)

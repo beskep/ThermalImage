@@ -115,6 +115,7 @@ class Stitcher:
                features_finder=None,
                compose_scale=1.0,
                work_scale=1.0,
+               warp_threshold=20.0,
                try_cuda=False):
     self._mode = None
     self._estimator = None
@@ -130,6 +131,7 @@ class Stitcher:
     self._compose_scale = compose_scale
     self._work_scale = work_scale
     self._compose_work_aspect = compose_scale / work_scale
+    self._warp_threshold = warp_threshold
     self._try_cuda = try_cuda
 
     self.features_finder = features_finder
@@ -400,15 +402,15 @@ class Stitcher:
     if not adjuster_status:
       raise ValueError('Camera parameters adjusting failed')
 
-    # logger.debug('wave correction')
-    # if self.flag_wave_correction:
-    #   # FIXME: wave correction -> cv assert 에러
-    #   rmats = [np.copy(x.R) for x in cameras]
-    #   rmats_correct = [
-    #       cv.detail.waveCorrect(x, cv.detail.WAVE_CORRECT_HORIZ) for x in rmats
-    #   ]
-    #   for rmat, cam in zip(rmats_correct, cameras):
-    #     cam.R = rmat
+    logger.debug('Wave correction')
+    Rs = [np.copy(camera.R) for camera in cameras]
+    try:
+      cv.detail.waveCorrect(Rs, cv.detail.WAVE_CORRECT_HORIZ)
+    except cv.error:
+      logger.debug('Wave correction failed')
+    else:
+      for camera, R in zip(cameras, Rs):
+        camera.R = R
 
     return cameras, indices, matches_graph
 
@@ -426,8 +428,8 @@ class Stitcher:
 
     # TODO 적당한 배율 찾기
     warped_shape = (roi[2] - roi[0], roi[3] - roi[1])
-    if ((image.shape[0] * 10 < warped_shape[0]) or
-        (image.shape[1] * 10 < warped_shape[1])):
+    if any(image.shape[x] * self._warp_threshold < warped_shape[x]
+           for x in range(2)):
       raise cv.error
 
     if abs(self._compose_scale - 1) > 0.1:
@@ -473,12 +475,13 @@ class Stitcher:
     rois = []
     for idx, (image, mask, camera) in enumerate(zip(images, masks, cameras)):
       try:
-        wi, wm, roi = self.warp_image(image, mask, camera)
+        wi, wm, roi = self.warp_image(image.astype('float64'), mask, camera)
+      except cv.error:
+        logger.error(f'과도한 변형으로 인해 {idx+1}번 영상을 제외합니다.')
+      else:
         warped_images.append(wi)
         warped_masks.append(wm)
         rois.append(roi)
-      except cv.error:
-        logger.error(f'{idx+1}번 영상의 과도한 변형으로 인한 오류 발생. 해당 영상을 제외합니다.')
 
     return warped_images, warped_masks, rois
 

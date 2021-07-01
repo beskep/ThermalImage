@@ -64,7 +64,7 @@ class FlirExtractor:
     if vis_array is None:
       raise ValueError('Vis image 추출 실패')
 
-    return ir_array.copy(), vis_array.copy()
+    return ir_array.astype('float32'), vis_array.copy()
 
   def extract_ir(self, path=None):
     self._check_path(path)
@@ -73,7 +73,7 @@ class FlirExtractor:
     if ir_array is None:
       raise ValueError('IR image 추출 실패')
 
-    return ir_array.copy()
+    return ir_array.astype('float32')
 
   def extract_vis(self, path=None):
     self._check_path(path)

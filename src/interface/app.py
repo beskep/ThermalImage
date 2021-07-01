@@ -553,6 +553,8 @@ class PanoramaApp(MDApp):
     mask = self._result['mask']
     options = self._result['options']
 
+    panorama[np.isnan(panorama)] = np.nanmedian(panorama)
+
     # 파노라마 저장 (열화상의 경우엔 흑백으로 저장)
     image_uint = panorama.copy()
     image_uint = rescale_intensity(panorama, out_range='uint16')

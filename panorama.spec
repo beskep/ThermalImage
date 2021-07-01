@@ -7,6 +7,10 @@ path = os.path.normpath(os.path.abspath('./src'))
 if path not in sys.path:
   sys.path.insert(0, path)
 
+runtime_hook = os.path.normpath('./runtime_hook.py')
+if not os.path.exists(runtime_hook):
+  raise FileNotFoundError(runtime_hook)
+
 from kivymd import hooks_path as kivymd_hooks_path
 
 block_cipher = None
@@ -28,7 +32,7 @@ a = Analysis(['panorama.py'],
                  'kivymd.stiffscroll',
              ],
              hookspath=[kivymd_hooks_path],
-             runtime_hooks=['D:\\Python\\ThermalImage\\runtime_hook.py'],
+             runtime_hooks=[runtime_hook],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,

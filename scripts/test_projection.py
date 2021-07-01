@@ -7,8 +7,8 @@ import tools.imagetools as imt
 from tools import projection
 
 if __name__ == '__main__':
-  path = (r'D:\repo\ThermalImage\Panorama\KICT\2020-11-10\result'
-          r'\MainBldgBackLoc1PanTiltHandheld_plane\panorama_colormap.png')
+  path = (r'D:\test\panorama\MainBldgBackLoc1PanTiltTripodResult'
+          r'\panorama_colormap.png')
   image = skimage.io.imread(path)
 
   image_alpha = image[:, :, -1]
@@ -32,8 +32,8 @@ if __name__ == '__main__':
   lrs = np.linspace(-max_angle, max_angle, num=5)
 
   uds = np.linspace(0, max_angle, num=3)
-  uds = [40.0 * np.pi / 180.0]
-  lrs = [10.0 * np.pi / 180.0]
+  # uds = [40.0 * np.pi / 180.0]
+  # lrs = [10.0 * np.pi / 180.0]
 
   fig, axes = plt.subplots(nrows=len(uds), ncols=len(lrs), squeeze=False)
 
